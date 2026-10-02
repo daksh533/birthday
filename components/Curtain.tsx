@@ -126,6 +126,7 @@ const DEFAULT_TARGET = new Date(Date.UTC(2026, 9, 3, 0, 0, 0) - (5 * 60 + 30) * 
 type UnitKey = 'days' | 'hours' | 'minutes' | 'seconds';
 
 export default function ShowtimeCountdown({
+  targetDate,
   tickerText = 'SAVE THE DATE · OCTOBER 3 ·',
   marqueeTitle = 'NOW SHOWING',
   marqueeSub = "a Pipi production, live October 3rd",
@@ -137,6 +138,7 @@ export default function ShowtimeCountdown({
   showPreviewButton = true,
 }: ShowtimeCountdownProps) {
   const router = useRouter();
+  const targetTime = targetDate?.getTime() ?? DEFAULT_TARGET.getTime();
 
   // Both flip together, only once the lock screen has fully faded out.
   // `mounted` gates your children, `revealed` unmounts the overlay itself.
@@ -380,7 +382,7 @@ export default function ShowtimeCountdown({
   useEffect(() => {
     if (revealed) return;
     async function paint() {
-      const r = await getRemaining(targetDate?.getTime() ?? DEFAULT_TARGET.getTime());
+      const r = await getRemaining(targetTime);
       paintUnit(daysRef.current, 'days', String(Math.min(r.days, 99)).padStart(2, '0'));
       paintUnit(hoursRef.current, 'hours', String(r.hours).padStart(2, '0'));
       paintUnit(minutesRef.current, 'minutes', String(r.minutes).padStart(2, '0'));
@@ -395,7 +397,7 @@ export default function ShowtimeCountdown({
         intervalRef.current = null;
       }
     };
-  }, [revealed, paintUnit, triggerUnlock]);
+  }, [revealed, paintUnit, targetTime, triggerUnlock]);
 
   const overlay = (
     <div className="showtime-root " ref={rootRef}>
