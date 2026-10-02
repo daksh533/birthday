@@ -90,13 +90,20 @@ interface Remaining {
   seconds: number;
 }
 
-const TARGET = new Date('2026-10-03T00:00:00+05:30').getTime();
+async function getRemaining(target: number) {
+  let now = Date.now();
 
-async function getRemaining() {
-  const res = await fetch('/api/time', { cache: 'no-store' });
-  const { now } = await res.json();
+  try {
+    const res = await fetch('/api/time', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data.now === 'number') now = data.now;
+    }
+  } catch {
+    // Use the browser clock if the deployment cannot reach the time route.
+  }
 
-  const diff = TARGET - now;
+  const diff = target - now;
 
   if (diff <= 0) {
     return { days: 0, hours: 0, minutes: 0, seconds: 0, total: 0 };
@@ -373,7 +380,7 @@ export default function ShowtimeCountdown({
   useEffect(() => {
     if (revealed) return;
     async function paint() {
-      const r = await getRemaining();
+      const r = await getRemaining(targetDate?.getTime() ?? DEFAULT_TARGET.getTime());
       paintUnit(daysRef.current, 'days', String(Math.min(r.days, 99)).padStart(2, '0'));
       paintUnit(hoursRef.current, 'hours', String(r.hours).padStart(2, '0'));
       paintUnit(minutesRef.current, 'minutes', String(r.minutes).padStart(2, '0'));
